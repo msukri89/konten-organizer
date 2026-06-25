@@ -1,3 +1,4 @@
+import React from 'react';
 const STORAGE_KEY = 'konten-organizer-data-v1';
 
 const STATUSES = [

@@ -1,16 +1,775 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f97316" />
-    <meta name="description" content="Konten Organizer - PWA manajemen konten organisasi/lembaga." />
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-    <title>Konten Organizer</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f97316" />
+  <meta name="description" content="Konten Organizer Lite - alat ringan untuk membuat konten organisasi dari ide sampai siap posting." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>Konten Organizer Lite</title>
+  <style>
+    :root {
+      --bg: #fff7ed;
+      --panel: rgba(255,255,255,.92);
+      --text: #182236;
+      --muted: #667085;
+      --line: #fed7aa;
+      --soft: #ffedd5;
+      --orange: #f97316;
+      --orange-dark: #c2410c;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --shadow: 0 20px 50px rgba(124,45,18,.11);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(249,115,22,.18), transparent 34rem), var(--bg);
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 92px;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 0;
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 15px;
+      display: grid; place-items: center;
+      color: #fff; font-weight: 900;
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      box-shadow: 0 14px 34px rgba(249,115,22,.3);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand small { display: block; }
+    .brand strong { line-height: 1.05; }
+    .brand small { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42vw; }
+    .nav { display: flex; align-items: center; gap: 8px; }
+    .tab {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+    .tab.active { color: var(--orange-dark); background: #fff; border-color: var(--line); box-shadow: 0 8px 22px rgba(124,45,18,.08); }
+    .hero {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .hero-main, .panel, .content-card, .idea-card, .focus-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+    .hero-main {
+      padding: clamp(24px, 4vw, 46px);
+      min-height: 330px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: .78rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(2rem, 6vw, 4.4rem); line-height: .98; margin-bottom: 16px; letter-spacing: -.04em; }
+    h2 { font-size: clamp(1.4rem, 3vw, 2.05rem); letter-spacing: -.02em; }
+    p { line-height: 1.7; color: var(--muted); }
+    .hero-actions, .row, .card-actions, .status-row, .mini-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .btn.primary { background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; box-shadow: 0 12px 26px rgba(249,115,22,.24); }
+    .btn.ghost { background: #fff; color: var(--orange-dark); border: 1px solid var(--line); }
+    .btn.soft { background: var(--soft); color: var(--orange-dark); }
+    .btn.small { padding: 8px 11px; border-radius: 12px; font-size: .88rem; }
+    .btn.danger { background: var(--red-soft); color: var(--red); }
+    .side-stack { display: grid; gap: 16px; }
+    .focus-card { padding: 20px; display: grid; align-content: center; }
+    .focus-card strong { font-size: 2.6rem; display: block; color: var(--orange-dark); margin-bottom: 2px; }
+    .focus-card span { color: var(--muted); }
+    .section { display: none; margin-top: 18px; }
+    .section.active { display: block; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .panel { padding: 20px; }
+    .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .panel-head h2, .panel-head h3 { margin-bottom: 4px; }
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 22px;
+      padding: 22px;
+      color: var(--muted);
+      background: rgba(255,237,213,.28);
+      text-align: center;
+    }
+    .content-list, .idea-list, .calendar-list { display: grid; gap: 12px; }
+    .content-card, .idea-card { padding: 16px; }
+    .content-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .content-card h3, .idea-card h3 { margin: 0 0 4px; }
+    .meta { color: var(--muted); font-size: .92rem; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-radius: 999px;
+      font-size: .78rem; font-weight: 900;
+      white-space: nowrap;
+    }
+    .status-rencana { background: var(--blue-soft); color: var(--blue); }
+    .status-siap { background: var(--green-soft); color: var(--green); }
+    .status-tayang { background: var(--soft); color: var(--orange-dark); }
+    .caption-box {
+      width: 100%; min-height: 132px; resize: vertical;
+      border: 1px solid var(--line); border-radius: 18px;
+      padding: 13px 14px; margin: 12px 0 10px;
+      background: #fffaf4; color: var(--text); line-height: 1.6;
+    }
+    .mini-note {
+      border-left: 4px solid var(--orange);
+      background: rgba(255,237,213,.65);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: .92rem;
+      margin: 8px 0 12px;
+    }
+    .checklist { display: grid; gap: 8px; margin: 10px 0; }
+    .check {
+      display: flex; align-items: center; gap: 9px;
+      color: var(--muted); font-size: .92rem;
+    }
+    .status-btn {
+      border: 1px solid var(--line); background: #fff; color: var(--muted);
+      border-radius: 999px; padding: 8px 10px; font-weight: 900; font-size: .84rem;
+    }
+    .status-btn.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+    .quick-idea {
+      display: grid; gap: 10px;
+    }
+    .quick-idea textarea, .field input, .field select, .field textarea {
+      width: 100%; border: 1px solid var(--line); background: #fff;
+      border-radius: 16px; padding: 12px 13px; color: var(--text);
+      outline: none;
+    }
+    .quick-idea textarea:focus, .field input:focus, .field select:focus, .field textarea:focus { box-shadow: 0 0 0 4px rgba(249,115,22,.16); }
+    .field label { display: block; font-weight: 900; margin-bottom: 6px; font-size: .9rem; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .wide { grid-column: 1 / -1; }
+    .calendar-day {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 22px;
+      padding: 14px;
+    }
+    .date-chip { font-weight: 900; color: var(--orange-dark); }
+    .day-items { display: grid; gap: 8px; }
+    .day-item {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,237,213,.55);
+      display: flex; justify-content: space-between; gap: 10px; align-items: center;
+    }
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 50;
+      display: none; align-items: center; justify-content: center;
+      padding: 18px; background: rgba(24,34,54,.42);
+      backdrop-filter: blur(8px);
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      width: min(720px, 100%);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 22px;
+      max-height: 92vh;
+      overflow: auto;
+    }
+    .modal-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+    .toast {
+      position: fixed; right: 18px; bottom: 18px; z-index: 80;
+      display: none; background: #182236; color: #fff;
+      border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow);
+      max-width: min(420px, calc(100vw - 36px));
+    }
+    .toast.show { display: block; animation: pop .16s ease-out; }
+    @keyframes pop { from { transform: translateY(8px); opacity: .3; } to { transform: none; opacity: 1; } }
+    .bottom-nav {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      display: none; justify-content: center; gap: 6px;
+      padding: 10px 12px; background: rgba(255,255,255,.9);
+      border-top: 1px solid var(--line); backdrop-filter: blur(14px);
+    }
+    .bottom-nav .tab { flex: 1; max-width: 160px; text-align: center; }
+    .muted { color: var(--muted); }
+    .hide { display: none !important; }
+    .tiny-link { color: var(--muted); text-decoration: none; font-size: .88rem; }
+    .tiny-link:hover { color: var(--orange-dark); }
+    @media (max-width: 860px) {
+      .app { width: min(100% - 22px, 760px); padding-top: 8px; }
+      .topbar .nav { display: none; }
+      .bottom-nav { display: flex; }
+      .hero { grid-template-columns: 1fr; }
+      .side-stack { grid-template-columns: repeat(3, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .calendar-day { grid-template-columns: 1fr; }
+      .hero-main { min-height: 280px; }
+      .content-top { align-items: start; }
+    }
+    @media (max-width: 560px) {
+      .topbar { align-items: flex-start; }
+      .brand small { max-width: 55vw; }
+      .side-stack { grid-template-columns: 1fr; }
+      .hero-actions .btn { width: 100%; }
+      .panel-head, .content-top { flex-direction: column; }
+      .btn { width: 100%; }
+      .card-actions .btn, .mini-actions .btn { width: auto; }
+      h1 { font-size: 2.35rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">KO</div>
+        <div>
+          <strong>Konten Organizer</strong>
+          <small>Lite: bikin konten tanpa ribet</small>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Navigasi utama">
+        <button class="tab active" data-tab="today">Hari Ini</button>
+        <button class="tab" data-tab="ideas">Ide</button>
+        <button class="tab" data-tab="calendar">Kalender</button>
+      </nav>
+    </header>
+
+    <section id="section-today" class="section active">
+      <div class="hero">
+        <div class="hero-main">
+          <p class="eyebrow" id="todayLabel">Hari ini</p>
+          <h1>Bikin konten, jangan mengurus aplikasi.</h1>
+          <p>Cukup isi topik dan jenis konten. Aplikasi langsung bantu buat draft caption, catatan visual, jadwal ringan, dan checklist 3 langkah.</p>
+          <div class="hero-actions">
+            <button class="btn primary" id="openQuick">+ Buat Konten Cepat</button>
+            <button class="btn ghost" data-tab="ideas">Tulis Ide Dulu</button>
+          </div>
+        </div>
+        <div class="side-stack">
+          <div class="focus-card"><strong id="todayCount">0</strong><span>konten perlu dicek hari ini</span></div>
+          <div class="focus-card"><strong id="readyCount">0</strong><span>siap posting</span></div>
+          <div class="focus-card"><strong id="ideaCount">0</strong><span>ide mentah tersimpan</span></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2>Fokus Hari Ini</h2><p>Cukup pilih satu. Salin caption. Posting. Selesai.</p></div>
+            <button class="btn ghost small" id="clearDone">Sembunyikan tayang</button>
+          </div>
+          <div id="todayList" class="content-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2>Ide Cepat</h2><p>Tempat menaruh ide tanpa banyak kolom.</p></div>
+          </div>
+          <div class="quick-idea">
+            <textarea id="ideaInput" rows="4" placeholder="Contoh: bikin konten tentang dokumentasi kegiatan Gerak Batin agar tiap PK lebih aktif..."></textarea>
+            <button class="btn primary" id="saveIdea">Simpan Ide</button>
+          </div>
+          <div style="height: 14px"></div>
+          <div id="miniIdeas" class="idea-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-ideas" class="section">
+      <div class="panel">
+        <div class="panel-head">
+          <div><p class="eyebrow">Bank Ide</p><h2>Ide tidak perlu rapi dulu.</h2><p>Tulis cepat, nanti bisa dijadikan konten dalam satu klik.</p></div>
+          <button class="btn primary" id="openQuickFromIdeas">+ Buat Konten</button>
+        </div>
+        <div class="quick-idea">
+          <textarea id="ideaInputFull" rows="4" placeholder="Tulis ide mentah di sini..."></textarea>
+          <button class="btn primary" id="saveIdeaFull">Simpan Ide</button>
+        </div>
+      </div>
+      <div style="height: 16px"></div>
+      <div id="ideaList" class="idea-list"></div>
+    </section>
+
+    <section id="section-calendar" class="section">
+      <div class="panel">
+        <div class="panel-head">
+          <div><p class="eyebrow">Kalender Otomatis</p><h2>Jadwal muncul dari konten yang dibuat.</h2><p>Tidak perlu mengisi kalender manual.</p></div>
+          <button class="btn primary" id="openQuickFromCalendar">+ Konten Cepat</button>
+        </div>
+        <div id="calendarList" class="calendar-list"></div>
+      </div>
+      <div style="height: 16px"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Data sederhana</h3><p>Backup hanya kalau diperlukan. Tidak masuk alur utama.</p></div>
+        </div>
+        <div class="row">
+          <button class="btn ghost small" id="exportData">Export JSON</button>
+          <label class="btn ghost small" for="importData">Import JSON</label>
+          <input id="importData" type="file" accept="application/json" class="hide" />
+          <button class="btn danger small" id="resetData">Reset</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navigasi bawah">
+    <button class="tab active" data-tab="today">Hari Ini</button>
+    <button class="tab" data-tab="ideas">Ide</button>
+    <button class="tab" data-tab="calendar">Kalender</button>
+  </nav>
+
+  <div class="modal-backdrop" id="quickModal" role="dialog" aria-modal="true" aria-label="Buat konten cepat">
+    <div class="modal">
+      <div class="modal-head">
+        <div><p class="eyebrow">Konten Cepat</p><h2>Isi seperlunya saja.</h2><p>Kolom tanggal, jam, dan tempat boleh dikosongi.</p></div>
+        <button class="btn ghost small" id="closeQuick">Tutup</button>
+      </div>
+      <form id="quickForm" class="form-grid">
+        <div class="field">
+          <label for="contentType">Jenis konten</label>
+          <select id="contentType" required>
+            <option>Pengumuman Kegiatan</option>
+            <option>Reminder Kegiatan</option>
+            <option>Dokumentasi/Laporan</option>
+            <option>Dakwah Singkat</option>
+            <option>Ucapan Hari Besar</option>
+            <option>Program Sosial/Santunan</option>
+            <option>Video Pendek/Reels</option>
+            <option>Edukasi Organisasi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="platform">Platform</label>
+          <select id="platform" required>
+            <option>WhatsApp Status</option>
+            <option>Instagram Feed</option>
+            <option>Instagram Story</option>
+            <option>TikTok/Reels</option>
+            <option>Facebook</option>
+            <option>YouTube Shorts</option>
+          </select>
+        </div>
+        <div class="field wide">
+          <label for="topic">Topik / nama kegiatan</label>
+          <input id="topic" required placeholder="Contoh: Istighotsah Rutin IASS Surabaya" />
+        </div>
+        <div class="field">
+          <label for="date">Tanggal posting</label>
+          <input id="date" type="date" />
+        </div>
+        <div class="field">
+          <label for="time">Jam posting</label>
+          <input id="time" type="time" />
+        </div>
+        <div class="field wide">
+          <label for="place">Tempat / catatan singkat</label>
+          <input id="place" placeholder="Contoh: Masjid Al-Amin / Sekretariat / Aula" />
+        </div>
+        <div class="wide row" style="justify-content:flex-end; margin-top: 8px;">
+          <button type="button" class="btn ghost" id="cancelQuick">Batal</button>
+          <button class="btn primary" type="submit">Buat Draft Caption</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'konten-organizer-lite-v2';
+    const oldKey = 'konten-organizer-data-v1';
+    const statusList = ['Rencana', 'Siap', 'Tayang'];
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+    const today = () => new Date().toISOString().slice(0, 10);
+    const uid = (prefix = 'id') => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const safe = (value) => String(value ?? '').replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Tanpa tanggal';
+      return new Intl.DateTimeFormat('id-ID', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(dateString + 'T12:00:00'));
+    }
+
+    function defaultData() {
+      return {
+        orgName: 'Konten Organizer',
+        contents: [
+          makeContent({
+            type: 'Pengumuman Kegiatan',
+            topic: 'Istighotsah Rutin',
+            platform: 'WhatsApp Status',
+            date: today(),
+            time: '08:00',
+            place: 'Masjid / Aula Organisasi',
+            status: 'Siap'
+          })
+        ],
+        ideas: [
+          { id: uid('idea'), text: 'Buat konten ringan tentang pentingnya dokumentasi kegiatan organisasi.', createdAt: new Date().toISOString() }
+        ],
+        hidePublishedToday: false
+      };
+    }
+
+    function loadData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+        const old = localStorage.getItem(oldKey);
+        if (old) {
+          const parsed = JSON.parse(old);
+          const migrated = defaultData();
+          if (Array.isArray(parsed.contents)) {
+            migrated.contents = parsed.contents.slice(0, 8).map((item) => makeContent({
+              type: item.format || 'Pengumuman Kegiatan',
+              topic: item.title || 'Konten Lama',
+              platform: item.platform || 'WhatsApp Status',
+              date: item.postDate || today(),
+              time: item.postTime || '',
+              place: item.notes || '',
+              status: item.status === 'Sudah Tayang' ? 'Tayang' : item.status === 'Siap Posting' ? 'Siap' : 'Rencana',
+              caption: item.caption || ''
+            }));
+          }
+          saveData(migrated);
+          return migrated;
+        }
+      } catch (err) { console.warn(err); }
+      return defaultData();
+    }
+
+    let data = loadData();
+
+    function saveData(next = data) {
+      data = next;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function makeContent(input) {
+      const date = input.date || today();
+      const time = input.time || '';
+      const type = input.type || 'Pengumuman Kegiatan';
+      const topic = input.topic || 'Konten Baru';
+      const platform = input.platform || 'WhatsApp Status';
+      const place = input.place || '';
+      const caption = input.caption || generateCaption({ type, topic, date, time, place, platform });
+      return {
+        id: uid('content'),
+        type, topic, platform, date, time, place,
+        status: input.status || 'Rencana',
+        caption,
+        visual: generateVisual({ type, topic, platform, place }),
+        checklist: ['Caption siap', 'Visual/foto siap', 'Posting lalu tandai Tayang'],
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function eventLine(date, time, place) {
+      const lines = [];
+      if (date) lines.push(`Tanggal: ${formatDate(date)}`);
+      if (time) lines.push(`Waktu: ${time}`);
+      if (place) lines.push(`Tempat: ${place}`);
+      return lines.join('\n');
+    }
+
+    function generateCaption({ type, topic, date, time, place, platform }) {
+      const detail = eventLine(date, time, place);
+      const short = platform.includes('Status') || platform.includes('Story');
+      if (type === 'Pengumuman Kegiatan') return `Assalamu’alaikum warahmatullahi wabarakatuh.\n\nKami mengundang Bapak/Ibu/Saudara/i untuk hadir dalam kegiatan:\n\n${topic}\n${detail}\n\nSemoga kegiatan ini berjalan lancar dan membawa keberkahan.\n\nWassalamu’alaikum warahmatullahi wabarakatuh.`;
+      if (type === 'Reminder Kegiatan') return `Reminder kegiatan ${topic}.\n\n${detail}\n\nJangan lupa hadir tepat waktu. Semoga Allah memberikan kemudahan, kelancaran, dan keberkahan untuk kita semua.`;
+      if (type === 'Dokumentasi/Laporan') return `Alhamdulillah, kegiatan ${topic} telah terlaksana dengan baik.\n\nTerima kasih kepada seluruh pihak yang hadir, mendukung, dan membantu jalannya kegiatan ini. Semoga menjadi amal kebaikan dan membawa manfaat yang luas.\n\n${place ? 'Lokasi: ' + place : ''}`;
+      if (type === 'Dakwah Singkat') return `${topic}\n\nAda kebaikan yang tidak selalu besar, tetapi bernilai ketika dilakukan dengan istiqamah. Mari terus memperbaiki diri, menjaga niat, dan memperbanyak amal yang bermanfaat.\n\nSemoga Allah membimbing langkah kita dalam kebaikan.`;
+      if (type === 'Ucapan Hari Besar') return `Keluarga besar ${data?.orgName || 'organisasi kami'} mengucapkan:\n\n${topic}\n\nSemoga momentum ini menjadi penguat iman, amal, persaudaraan, dan semangat berkhidmah untuk umat.`;
+      if (type === 'Program Sosial/Santunan') return `Alhamdulillah, program ${topic} telah terlaksana dengan baik.\n\nSemoga bantuan yang tersalurkan membawa manfaat bagi penerima, menjadi keberkahan bagi para donatur, dan menguatkan kepedulian kita kepada sesama.`;
+      if (type === 'Video Pendek/Reels') return short ? `HOOK: ${topic}\n\n1. Buka dengan masalah utama.\n2. Tampilkan momen/fakta paling kuat.\n3. Tutup dengan ajakan singkat.\n\nCTA: Simpan dan bagikan jika bermanfaat.` : `Ide video pendek: ${topic}\n\nPembuka: tampilkan kalimat yang langsung menyentuh masalah.\nIsi: 2–3 poin utama dengan visual kegiatan/ilustrasi.\nPenutup: ajakan untuk hadir, mendukung, atau mengambil pelajaran.`;
+      return `${topic}\n\nBanyak hal baik dalam organisasi yang perlu disampaikan dengan sederhana agar mudah dipahami. Semoga konten ini menjadi pengingat, informasi, dan manfaat untuk semua.`;
+    }
+
+    function generateVisual({ type, topic, platform, place }) {
+      if (type.includes('Video')) return `Catatan video: ambil 3 potongan visual: pembuka, aktivitas utama, penutup. Format cocok untuk ${platform}.`;
+      if (type.includes('Dokumentasi')) return `Pilih 3–5 foto terbaik. Utamakan wajah jelas, suasana kegiatan, dan momen kebersamaan. ${place ? 'Cantumkan lokasi: ' + place + '.' : ''}`;
+      if (type.includes('Pengumuman') || type.includes('Reminder')) return `Visual sederhana: judul besar “${topic}”, tanggal/jam/tempat, logo organisasi, latar bersih, warna identitas lembaga.`;
+      return `Visual ringan: gunakan foto kegiatan/ilustrasi yang relevan, teks tidak terlalu banyak, dan ruang kosong yang cukup.`;
+    }
+
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    function setTab(tab) {
+      $$('.section').forEach((section) => section.classList.remove('active'));
+      $(`#section-${tab}`).classList.add('active');
+      $$('.tab').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function render() {
+      $('#todayLabel').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
+      const todayValue = today();
+      const activeToday = data.contents.filter((c) => c.date <= todayValue && c.status !== 'Tayang');
+      const ready = data.contents.filter((c) => c.status === 'Siap');
+      $('#todayCount').textContent = activeToday.length;
+      $('#readyCount').textContent = ready.length;
+      $('#ideaCount').textContent = data.ideas.length;
+      renderToday();
+      renderIdeas();
+      renderCalendar();
+    }
+
+    function renderToday() {
+      const list = $('#todayList');
+      const todayValue = today();
+      let items = data.contents.filter((c) => c.date <= todayValue || c.status === 'Siap');
+      if (data.hidePublishedToday) items = items.filter((c) => c.status !== 'Tayang');
+      items.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+      list.innerHTML = items.length ? items.map(contentCard).join('') : `<div class="empty">Belum ada beban hari ini. Klik <b>Buat Konten Cepat</b> kalau mau mulai.</div>`;
+      bindContentCards(list);
+      $('#miniIdeas').innerHTML = data.ideas.slice(0, 3).map(ideaCard).join('') || `<div class="empty">Belum ada ide.</div>`;
+      bindIdeaCards($('#miniIdeas'));
+    }
+
+    function contentCard(c) {
+      return `<article class="content-card" data-id="${c.id}">
+        <div class="content-top">
+          <div>
+            <h3>${safe(c.topic)}</h3>
+            <div class="meta">${safe(c.type)} · ${safe(c.platform)} · ${formatDate(c.date)} ${c.time ? '· ' + safe(c.time) : ''}</div>
+          </div>
+          <span class="badge status-${c.status.toLowerCase()}">${safe(c.status)}</span>
+        </div>
+        <textarea class="caption-box" data-caption>${safe(c.caption)}</textarea>
+        <div class="mini-note"><b>Catatan visual:</b> ${safe(c.visual)}</div>
+        <div class="checklist">${c.checklist.map((item, idx) => `<label class="check"><input type="checkbox" data-check="${idx}"> ${safe(item)}</label>`).join('')}</div>
+        <div class="status-row" aria-label="Ubah status">${statusList.map((s) => `<button class="status-btn ${c.status === s ? 'active' : ''}" data-status="${s}">${s}</button>`).join('')}</div>
+        <div style="height:10px"></div>
+        <div class="card-actions">
+          <button class="btn primary small" data-copy>Salin Caption</button>
+          <button class="btn ghost small" data-date>Ganti Tanggal</button>
+          <button class="btn danger small" data-delete>Hapus</button>
+        </div>
+      </article>`;
+    }
+
+    function bindContentCards(root) {
+      $$('[data-id]', root).forEach((card) => {
+        const id = card.dataset.id;
+        const getContent = () => data.contents.find((c) => c.id === id);
+        $('[data-caption]', card).addEventListener('input', (e) => {
+          const c = getContent();
+          if (!c) return;
+          c.caption = e.target.value;
+          saveData();
+        });
+        $$('[data-status]', card).forEach((button) => button.addEventListener('click', () => {
+          const c = getContent();
+          if (!c) return;
+          c.status = button.dataset.status;
+          saveData(); render(); showToast(`Status diubah: ${c.status}`);
+        }));
+        $('[data-copy]', card).addEventListener('click', async () => {
+          const text = $('[data-caption]', card).value;
+          try { await navigator.clipboard.writeText(text); showToast('Caption disalin. Tinggal paste ke platform.'); }
+          catch { $('[data-caption]', card).select(); document.execCommand('copy'); showToast('Caption disalin.'); }
+        });
+        $('[data-date]', card).addEventListener('click', () => {
+          const c = getContent();
+          if (!c) return;
+          const next = prompt('Tanggal posting format YYYY-MM-DD:', c.date || today());
+          if (!next) return;
+          c.date = next;
+          saveData(); render();
+        });
+        $('[data-delete]', card).addEventListener('click', () => {
+          if (!confirm('Hapus konten ini?')) return;
+          data.contents = data.contents.filter((c) => c.id !== id);
+          saveData(); render(); showToast('Konten dihapus.');
+        });
+      });
+    }
+
+    function renderIdeas() {
+      $('#ideaList').innerHTML = data.ideas.length ? data.ideas.map(ideaCard).join('') : `<div class="empty">Belum ada ide. Tulis apa saja dulu, tidak perlu rapi.</div>`;
+      bindIdeaCards($('#ideaList'));
+    }
+
+    function ideaCard(idea) {
+      return `<article class="idea-card" data-idea="${idea.id}">
+        <div class="content-top">
+          <div>
+            <h3>${safe(idea.text)}</h3>
+            <div class="meta">Disimpan ${formatDate(idea.createdAt.slice(0,10))}</div>
+          </div>
+        </div>
+        <div style="height:10px"></div>
+        <div class="mini-actions">
+          <button class="btn primary small" data-make>Jadikan Konten</button>
+          <button class="btn danger small" data-remove>Hapus</button>
+        </div>
+      </article>`;
+    }
+
+    function bindIdeaCards(root) {
+      $$('[data-idea]', root).forEach((card) => {
+        const id = card.dataset.idea;
+        $('[data-make]', card).addEventListener('click', () => {
+          const idea = data.ideas.find((i) => i.id === id);
+          if (!idea) return;
+          openQuick(idea.text);
+        });
+        $('[data-remove]', card).addEventListener('click', () => {
+          data.ideas = data.ideas.filter((i) => i.id !== id);
+          saveData(); render(); showToast('Ide dihapus.');
+        });
+      });
+    }
+
+    function renderCalendar() {
+      const grouped = {};
+      data.contents.forEach((c) => {
+        const key = c.date || 'tanpa-tanggal';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(c);
+      });
+      const keys = Object.keys(grouped).sort();
+      $('#calendarList').innerHTML = keys.length ? keys.map((date) => `<div class="calendar-day">
+          <div class="date-chip">${date === 'tanpa-tanggal' ? 'Tanpa tanggal' : formatDate(date)}</div>
+          <div class="day-items">${grouped[date].map((c) => `<div class="day-item"><span><b>${safe(c.topic)}</b><br><span class="meta">${safe(c.type)} · ${safe(c.platform)} ${c.time ? '· ' + safe(c.time) : ''}</span></span><span class="badge status-${c.status.toLowerCase()}">${safe(c.status)}</span></div>`).join('')}</div>
+        </div>`).join('') : `<div class="empty">Kalender masih kosong. Buat konten cepat dulu.</div>`;
+    }
+
+    function saveIdeaFrom(input) {
+      const value = input.value.trim();
+      if (!value) return showToast('Tulis idenya dulu bosku.');
+      data.ideas.unshift({ id: uid('idea'), text: value, createdAt: new Date().toISOString() });
+      input.value = '';
+      saveData(); render(); showToast('Ide tersimpan.');
+    }
+
+    function openQuick(prefill = '') {
+      $('#topic').value = prefill || '';
+      $('#date').value = today();
+      $('#time').value = '';
+      $('#place').value = '';
+      $('#quickModal').classList.add('show');
+      setTimeout(() => $('#topic').focus(), 50);
+    }
+
+    function closeQuick() { $('#quickModal').classList.remove('show'); }
+
+    $$('.tab, [data-tab]').forEach((button) => button.addEventListener('click', () => setTab(button.dataset.tab)));
+    $('#openQuick').addEventListener('click', () => openQuick());
+    $('#openQuickFromIdeas').addEventListener('click', () => openQuick());
+    $('#openQuickFromCalendar').addEventListener('click', () => openQuick());
+    $('#closeQuick').addEventListener('click', closeQuick);
+    $('#cancelQuick').addEventListener('click', closeQuick);
+    $('#quickModal').addEventListener('click', (e) => { if (e.target.id === 'quickModal') closeQuick(); });
+    $('#saveIdea').addEventListener('click', () => saveIdeaFrom($('#ideaInput')));
+    $('#saveIdeaFull').addEventListener('click', () => saveIdeaFrom($('#ideaInputFull')));
+    $('#clearDone').addEventListener('click', () => { data.hidePublishedToday = !data.hidePublishedToday; saveData(); render(); });
+
+    $('#quickForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = {
+        type: $('#contentType').value,
+        topic: $('#topic').value.trim(),
+        platform: $('#platform').value,
+        date: $('#date').value || today(),
+        time: $('#time').value,
+        place: $('#place').value,
+        status: 'Rencana'
+      };
+      if (!input.topic) return showToast('Topik wajib diisi.');
+      const content = makeContent(input);
+      data.contents.unshift(content);
+      data.ideas = data.ideas.filter((idea) => idea.text !== input.topic);
+      saveData(); closeQuick(); setTab('today'); render(); showToast('Draft caption sudah dibuat.');
+    });
+
+    $('#exportData').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `konten-organizer-lite-${today()}.json`; a.click(); URL.revokeObjectURL(url);
+    });
+
+    $('#importData').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const imported = JSON.parse(await file.text());
+        if (!Array.isArray(imported.contents) || !Array.isArray(imported.ideas)) throw new Error('Format tidak cocok');
+        saveData(imported); render(); showToast('Data berhasil diimport.');
+      } catch { showToast('File JSON tidak cocok.'); }
+      e.target.value = '';
+    });
+
+    $('#resetData').addEventListener('click', () => {
+      if (!confirm('Reset data lokal aplikasi?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      data = defaultData(); saveData(); render(); showToast('Data direset.');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
+    }
+
+    render();
+  </script>
+</body>
 </html>

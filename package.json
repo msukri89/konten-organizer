@@ -1,18 +1,9 @@
 {
-  "name": "konten-organizer-pwa",
+  "name": "konten-organizer-lite",
   "private": true,
-  "version": "0.1.0",
-  "type": "module",
+  "version": "2.0.0",
+  "description": "PWA ringan untuk produksi konten organisasi.",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
-  },
-  "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "react": "latest",
-    "react-dom": "latest"
-  },
-  "devDependencies": {}
+    "dev": "python3 -m http.server 5173 -d dist"
+  }
 }

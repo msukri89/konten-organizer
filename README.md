@@ -1,49 +1,16 @@
-# Konten Organizer PWA
+# Konten Organizer Lite
 
-Aplikasi PWA untuk membantu pengelola konten organisasi/lembaga mengatur agenda, kalender konten, produksi konten, template caption, checklist, dan arsip posting.
+Versi ringan dari Konten Organizer. Fokusnya bukan administrasi, tetapi mempercepat produksi konten organisasi.
 
-## Status
+## Prinsip versi Lite
 
-Versi ini adalah **MVP Tahap 1A - GitHub Ready**.
+- Satu tombol utama: Buat Konten Cepat
+- Input seminimal mungkin
+- Status hanya 3: Rencana, Siap, Tayang
+- Kalender otomatis dari konten yang dibuat
+- Ide cepat tanpa banyak kolom
+- Caption bisa langsung disalin
 
-- Bisa dijalankan lokal dengan Vite.
-- Bisa dideploy ke GitHub Pages memakai GitHub Actions.
-- Data masih lokal di browser menggunakan localStorage.
-- Belum ada login dan belum sinkron antar perangkat.
-- Tahap berikutnya: Firebase Authentication + Firestore.
+## Deploy
 
-## Jalankan di laptop
-
-```bash
-npm install
-npm run dev
-```
-
-## Build manual
-
-```bash
-npm run build
-```
-
-## Deploy ke GitHub Pages
-
-Ikuti file:
-
-```text
-PANDUAN_GITHUB.md
-```
-
-## Fitur MVP
-
-- Dashboard
-- Agenda kegiatan
-- Paket konten otomatis dari agenda
-- Kalender konten bulanan
-- Produksi konten berdasarkan status
-- Detail konten
-- Caption/naskah
-- Checklist produksi
-- Template caption organisasi
-- Arsip konten tayang
-- Pengaturan profil organisasi
-- Export/import backup JSON
+Repository ini memakai GitHub Actions dan GitHub Pages. Workflow akan langsung mengupload folder `dist`.
